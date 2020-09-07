@@ -1,10 +1,10 @@
 import tkinter as tk
 import sys
 import logging
-from argparse import ArgumentParser
 import time
 import os
 import configparser
+from argparse import ArgumentParser
 
 from lib.cleaner import Cleaner
 from lib.preprocessor import Preprocessor
@@ -64,4 +64,13 @@ if __name__ == "__main__":
 
 	log.info(f'Started, selected reviews file is: ({REVIEW_FILE})')
 
+# 1. Cleaner produces cleaned reviews dataframe file
 cleaner = Cleaner(reviews=REVIEW_FILE, year=args['year'], min_words=config.get('CLEANER', 'MIN_WORDS'))
+# 2. Preprocessor produces file ready for classification
+preprocessor = Preprocessor(
+	reviews=REVIEW_FILE,
+	column='Review',
+	year=args['year'],
+	stem=config.get('CLASSIFIER', 'STEM'),
+	lemmatize=config.get('CLASSIFIER', 'LEMMATIZE')
+	)

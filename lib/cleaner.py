@@ -22,7 +22,7 @@ class Cleaner:
 		'''
 		This class is made to handle user reviews scraped from Google Play.
 
-		Constructor requires a path to the reviews to kick off processing
+		Constructor requires a path to the reviews to kick off processing.
 		'''
 
 		self.reviews_file = reviews
@@ -55,7 +55,7 @@ class Cleaner:
 		self.upvote_top_five = self.dataframe.Likes.nlargest(5).values
 
 		# self.print_sample()
-		self.print_info()
+		# self.print_info()
 
 	def clean(self):
 		''' Executes the various functions to clean the dataset, exports clean .csv to root/data/cleaned '''
