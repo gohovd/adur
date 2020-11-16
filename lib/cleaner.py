@@ -19,31 +19,45 @@ log = logging.getLogger(__name__)
 class Cleaner:
 
 	def __init__(self, reviews=None, year=None, min_words=None):
-		'''
-		This class is made to handle user reviews scraped from Google Play.
+		'''The first step of the entire pipeline is to clean the dataframe.
+		Here we operate on the file found in the /data/reviews directory, and
+		perform the following steps:
 
-		Constructor requires a path to the reviews to kick off processing.
+		* add time columns (weekday name, year, month)
+		* add columns for review length (words, chars)
+		* convert the values of the ReplyDate column (to 1s and 0s)
+		* drop all reviews that are null
+		* drop short reviews (less than min_words)
+
+		Finally the file is given a new name (suffixed '_cleaned') and stored
+		in the /data/cleaned directory.
+
+		Keyword arguments:
+		reviews - path to the dataframe
+		year - slice of time to consider, in the dataframe
+		min_word - drop reviews shorter that min_words
 		'''
 
 		self.reviews_file = reviews
-		self.year = year
+		self.year = str(year)
 		self.min_words = int(min_words)
 
+		# First assume there already exists a cleaned version..
 		try:
 			CLEANED_FILE_ABSOLUTE = CLEANED_DIR + reviews[:-4] + "_cleaned.csv"
-			cleaned_dataframe = pd.read_csv(CLEANED_FILE_ABSOLUTE, index_col='Timestamp', parse_dates=True).loc[year]
-			log.info("Found cleaned version, skipping data-cleaning.")
+			cleaned_dataframe = pd.read_csv(CLEANED_FILE_ABSOLUTE, index_col='Timestamp', parse_dates=True).loc[self.year]
+			log.info("✅ Found cleaned version, skipping data-cleaning.")
 			self.dataframe = cleaned_dataframe
 			cleaned_version_exists = True
 		except Exception as e:
 			cleaned_version_exists = False
 			log.warning(f'Could not find cleaned version, {str(e)}')
-
 		if not cleaned_version_exists:
 			REVIEW_FILE_ABSOLUTE = REVIEWS_DIR + reviews
-			self.dataframe = pd.read_csv(REVIEW_FILE_ABSOLUTE, index_col='Timestamp', parse_dates=True).loc[year]
+			self.dataframe = pd.read_csv(REVIEW_FILE_ABSOLUTE, index_col='Timestamp', parse_dates=True).loc[self.year]
 			self.clean()
 
+		# Set some values for quick info print..
 		self.review_count = len(self.dataframe)
 		self.earliest_review_date = self.dataframe.index.min()
 		self.latest_review_date = self.dataframe.index.max()
@@ -58,7 +72,9 @@ class Cleaner:
 		# self.print_info()
 
 	def clean(self):
-		''' Executes the various functions to clean the dataset, exports clean .csv to root/data/cleaned '''
+		''' Executes the various functions to clean the dataset,
+		exports clean .csv to root/data/cleaned
+		'''
 		self.add_time_columns()
 		self.add_columns_for_review_length()
 		self.convert_replydates()

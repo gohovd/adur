@@ -13,6 +13,8 @@ from lib.classification import Classifier
 PATH_LIST = os.path.abspath(__file__).split(os.sep)
 ROOT_DIR = PATH_LIST[0:len(PATH_LIST)-1]
 REVIEWS_DIR = "/".join(ROOT_DIR) + "/data/reviews/"
+NORMALIZED_DIR = "/".join(ROOT_DIR) + "/data/normalized/"
+LABELS_DIR = "/".join(ROOT_DIR) + "/data/training/"
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -64,9 +66,24 @@ if __name__ == "__main__":
 
 	log.info(f'Started, selected reviews file is: ({REVIEW_FILE})')
 
-# 1. Cleaner produces cleaned reviews dataframe file
-cleaner = Cleaner(reviews=REVIEW_FILE, year=args['year'], min_words=config.get('CLEANER', 'MIN_WORDS'))
-# 2. Preprocessor produces file ready for classification
+
+'''
+Pipeline steps:
+
+No.		Class			Input								Output
+1		Cleaner			/data/reviews/<file>.csv			/data/cleaned/<file>_cleaned.csv
+2		Preprocessor	/data/reviews/<file>_cleaned.csv	-
+3		TSADFExporter	/data/reviews/<file>_cleaned.csv	/data/exportable/<file>_exported.csv
+4		Normalizer		/data/reviews/<file>_cleaned.csv	/data/normalized/<file>_normalized.csv
+5		Classifier		/data/reviews/<file>_normalized.csv	-
+'''
+
+cleaner = Cleaner(
+	reviews=REVIEW_FILE,
+	year=args['year'],
+	min_words=config.get('CLEANER', 'MIN_WORDS')
+	)
+
 preprocessor = Preprocessor(
 	reviews=REVIEW_FILE,
 	column='Review',
@@ -74,3 +91,12 @@ preprocessor = Preprocessor(
 	stem=config.get('CLASSIFIER', 'STEM'),
 	lemmatize=config.get('CLASSIFIER', 'LEMMATIZE')
 	)
+
+# TODO: Implement
+# 3. Classify
+# NORMALIZED_REVIEWS_ABSOLUTE = NORMALIZED_DIR + REVIEW_FILE[:-4] + "_normalized.csv"
+# CATEGORY_SENTIMENT_LABELS_ABSOLUTE = LABELS_DIR + "sen_cat.csv"
+# clf = Classifier(
+# 	reviews=NORMALIZED_REVIEWS_ABSOLUTE,
+# 	labels=CATEGORY_SENTIMENT_LABELS_ABSOLUTE
+# )

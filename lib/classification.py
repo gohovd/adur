@@ -28,11 +28,40 @@ log = logging.getLogger(__name__)
 
 class Classifier:
 	
-	def __init__(self):
-		log.info('initialized classifier')
+	def __init__(self, reviews, labels):
+		log.info(f'classifier initialized with file: {reviews} and labels {labels}')
+		self.dataframe = pd.read_csv(reviews, index_col='Timestamp', parse_dates=True)
+		self.reviews = self.dataframe.Review
+		self.labels = pd.read_csv(labels, index_col='index')
 
-	def train_classifier(self, reviews, labels, max_features=5000):
-		pass
+		print(self.labels)
+
+		# self.train_classifier(max_features=5000, random_state=42, train_size=0.7)
+
+	def train_classifier(self, max_features=5000, random_state=8, train_size=0.7):
+		''' Encode target labels with values between 0 and n_classes-1 '''
+		encoder = LabelEncoder()
+		encoded_labels = encoder.fit_transform(self.labels)
+
+		''' Split training and test data (70/30) '''
+		X_train, X_test, y_train, y_test = model_selection.train_test_split(
+			self.reviews,
+			encoded_labels,
+			random_state=random_state,
+			train_size=train_size
+		)
+
+		''' term frequency inverse document frequency '''
+		tfidf_vectorizer = TfidfVectorizer(max_features=max_features)
+		tfidf_vectorizer.fit(reviews) # fit on the entire vocabulary
+
+		''' Model(s) '''
+		log_reg = LogisticRegression(solver='liblinear', multi_class='auto')
+		log_reg = log_reg.fit(X_train_vect, y_train)
+		log_reg_predictions = log_reg.predict(X_test_vect)
+
+		''' Printing '''
+		self.print_performance('logistic regression', y_test, log_reg_predictions)
 
 	def print_performance(title, test, predicted):
 		print(f'/\/\/\/\/ {title}')
@@ -54,7 +83,7 @@ class Classifier:
 
 	def add_features(self, dataframe, features_list):
 		enriched_reviews = []
-		for index, row in dataframe.iterrows();
+		for index, row in dataframe.iterrows():
 
 			features = []
 			for nf in features_list:
@@ -68,3 +97,8 @@ class Classifier:
 		
 		return enriched_reviews
 
+	def stringify_reviews(self, reviews):
+		new_reviews = []
+		for review in reviews:
+			new_reviews.append(str(review))
+		return new_reviews
